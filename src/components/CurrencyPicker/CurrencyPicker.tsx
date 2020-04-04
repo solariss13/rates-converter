@@ -23,12 +23,8 @@ const useStyles = makeStyles((theme: Theme) =>
 
 const CurrencyPicker: React.FC<PropTypes> = ({ currency, setCurrentCurrency }) => {
   const [isVisible, toggleIsVisible] = useState<boolean>(false);
-  // const [currentCurrency, setCurrentCurrency] = useState<string>(currency);
+
   const classes = useStyles();
-
-  console.log('btn', currency);
-
-  useEffect(() => setCurrentCurrency(currency));
 
   const toggleListVisibility = () => toggleIsVisible(!isVisible);
 

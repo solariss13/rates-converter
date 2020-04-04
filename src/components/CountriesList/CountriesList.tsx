@@ -35,7 +35,7 @@ const useStyles = makeStyles((theme: Theme) =>
 const CountriesList: React.FC<PropsTypes> = ({ toggleIsActive, setCurrency, defaultCurrency }) => {
 
   const classes = useStyles();
-  const [selectedCurrency, setselectedCurrency] = useState<string>(defaultCurrency);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(defaultCurrency);
 
   useEffect(() => {
     document.addEventListener('click', handleClickOutside);
@@ -48,12 +48,9 @@ const CountriesList: React.FC<PropsTypes> = ({ toggleIsActive, setCurrency, defa
   const handleClickOutside = () => {
     toggleIsActive()};
 
-  const handleListItemClick = (
-    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    currencyCode: string,
-  ) => {
+  const handleListItemClick = (currencyCode: string) => {
     setCurrency(currencyCode)
-    setselectedCurrency(currencyCode);
+    setSelectedCurrency(currencyCode);
   };
 
   return (
@@ -64,7 +61,7 @@ const CountriesList: React.FC<PropsTypes> = ({ toggleIsActive, setCurrency, defa
             <ListItem
               button
               selected={selectedCurrency === currency.code}
-              onClick={event => handleListItemClick(event, currency.code)}
+              onClick={() => handleListItemClick(currency.code)}
               key={index}
             >
               <ListItemText primary={`${currency.emoji + currency.code}`} />
