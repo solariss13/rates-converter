@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Button from '@material-ui/core/Button';
 import CountriesList from '../CountriesList/CountriesList';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
-import './currency-picker.css';
 
 interface PropTypes {
   currency: string;
@@ -12,10 +11,10 @@ interface PropTypes {
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      width: 100,
+      width: 120,
       '& > *': {
         backgroundColor: theme.palette.grey[300],
-        width: 100
+        width: 120
       },
     },
   }),

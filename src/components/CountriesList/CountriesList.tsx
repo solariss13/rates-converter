@@ -3,37 +3,35 @@ import { makeStyles, Theme, createStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
-const { list: countries } = require('country-flag-emoji');
+import CurrencyFlag from 'react-currency-flags';
+const currencyCodes = require('currency-codes').codes();
 
-interface PropsTypes {
+interface PropTypes {
   setCurrency: (currency: string) => void;
   toggleIsActive: () => void;
   defaultCurrency: string;
 }
 
-interface currencyType {
-  code: string;
-  unicode: string;
-  name: string;
-  emoji: string;
-}
-
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      width: '100%',
-      maxWidth: 100,
+      width: 120,
       backgroundColor: theme.palette.grey[200],
       position: 'absolute',
       overflow: 'auto',
       maxHeight: 300,
+      borderRadius: 5,
+      marginBottom: 20,
+      scrollbarWidth: 'none',
+      '& span': {
+        marginRight: 5
+      },
     },
   }),
 );
 
 
-const CountriesList: React.FC<PropsTypes> = ({ toggleIsActive, setCurrency, defaultCurrency }) => {
-
+const CountriesList: React.FC<PropTypes> = ({ toggleIsActive, setCurrency, defaultCurrency }) => {
   const classes = useStyles();
   const [selectedCurrency, setSelectedCurrency] = useState<string>(defaultCurrency);
 
@@ -55,16 +53,17 @@ const CountriesList: React.FC<PropsTypes> = ({ toggleIsActive, setCurrency, defa
 
   return (
     <div className={classes.root}>
-      <List component="nav" aria-label="secondary mailbox folder">
-        {countries.map((currency: currencyType, index: number) => {
+      <List>
+        {currencyCodes.map((country: string, index: number) => {
           return (
             <ListItem
               button
-              selected={selectedCurrency === currency.code}
-              onClick={() => handleListItemClick(currency.code)}
+              selected={selectedCurrency === country}
+              onClick={() => handleListItemClick(country)}
               key={index}
             >
-              <ListItemText primary={`${currency.emoji + currency.code}`} />
+              <CurrencyFlag currency={`${country}`} size='md' />
+              <ListItemText primary={`${country}`} />
             </ListItem>
           )
         })}
