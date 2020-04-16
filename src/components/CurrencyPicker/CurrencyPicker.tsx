@@ -25,7 +25,9 @@ const CurrencyPicker: React.FC<PropTypes> = ({ currency, setCurrentCurrency }) =
 
   const classes = useStyles();
 
-  const toggleListVisibility = () => toggleIsVisible(!isVisible);
+  function toggleListVisibility() {
+    toggleIsVisible(!isVisible)
+  };
 
   return (
     <div>

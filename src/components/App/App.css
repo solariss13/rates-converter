@@ -10,6 +10,12 @@ body {
   width: 0;
 }
 
+.chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 canvas {
   height: auto !important;
   width: 70vw !important;

@@ -4,7 +4,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import CurrencyFlag from 'react-currency-flags';
-const currencyCodes = require('currency-codes').codes();
+import currencyCodes from '../../currencyList.json';
 
 interface PropTypes {
   setCurrency: (currency: string) => void;
@@ -43,10 +43,11 @@ const CountriesList: React.FC<PropTypes> = ({ toggleIsActive, setCurrency, defau
     }
   });
 
-  const handleClickOutside = () => {
-    toggleIsActive()};
+  function handleClickOutside() {
+    toggleIsActive()
+  };
 
-  const handleListItemClick = (currencyCode: string) => {
+  function handleListItemClick(currencyCode: string) {
     setCurrency(currencyCode)
     setSelectedCurrency(currencyCode);
   };
@@ -54,7 +55,7 @@ const CountriesList: React.FC<PropTypes> = ({ toggleIsActive, setCurrency, defau
   return (
     <div className={classes.root}>
       <List>
-        {currencyCodes.map((country: string, index: number) => {
+        {Object.values(currencyCodes).map((country: string, index: number) => {
           return (
             <ListItem
               button

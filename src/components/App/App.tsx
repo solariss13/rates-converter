@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import Chart from '../Chart/Chart';
 import CurrencyPicker from '../CurrencyPicker/CurrencyPicker';
 import SyncAltRoundedIcon from '@material-ui/icons/SyncAltRounded';
+import RadioButtons, { getDateFromPast } from '../RadioButtons/RadioButtons';
 import axios from 'axios';
 import './App.css';
 
 const defaultBaseCurrency = 'PLN';
 const defaultRelativeCurrency = 'EUR';
+const today = getDateFromPast(0);
+const weekAgo = getDateFromPast(7);
+
 
 interface CurrencyType {
   base: string,
@@ -27,44 +31,50 @@ const App: React.FC = () => {
   const [currency, setCurrency] = useState<CurrencyType>({base: defaultBaseCurrency, relative: defaultRelativeCurrency});
   const [isError, setIsError] = useState<boolean>(false);
   const [chartProps, setChartProps] = useState<ChartPropsType | undefined>();
+  const [date, setDate] = useState<string>(weekAgo);
 
   useEffect(() => {
+    const fetchData = async () => {
+      setIsError(false);
+      try {
+        const { data: { rates } } = await axios.get(
+          `https://api.exchangeratesapi.io/history?start_at=${date}&end_at=${today}&base=${currency.base}&symbols=${currency.relative}`
+        );
+
+        setRatesData(Object.entries(rates as Object).sort());
+      } catch(error) {
+        setIsError(true);
+      }
+    }
+
     fetchData();
-  }, [currency]);
+  }, [currency, date]);
 
   useEffect(() => {
     setChartProps(prepareChartData());
   }, [ratesData]);
 
-  const fetchData = async () => {
-    setIsError(false);
-    try {
-      const { data: { rates } } = await axios(
-        `https://api.exchangeratesapi.io/history?start_at=2018-01-01&end_at=2019-01-09&base=${currency.base}&symbols=${currency.relative}`
-      );
 
-      setRatesData(Object.entries(rates as Object).sort());
-    } catch(error) {
-      setIsError(true);
-    }
-  }
-
-  const prepareChartData = () => {
+  function prepareChartData() {
     const dates = ratesData?.map(rate => rate[0]);
     const rates = ratesData?.flatMap(rate => Object.values(rate[1]));
 
     return { dates, rates };
   };
 
-  const setRelativeCurrency = (newCurrency: string) => {
+  function onDateChange(date: string) {
+    setDate(date);
+  };
+
+  function setRelativeCurrency(newCurrency: string) {
     setCurrency({ relative: newCurrency, base: currency.base })
   };
 
-  const setBaseCurrency = (newCurrency: string) => {
+  function setBaseCurrency(newCurrency: string) {
     setCurrency({ base: newCurrency, relative: currency.relative })
   };
 
-  const handleClick = () => {
+  function handleCurrencySwap() {
     toggleShouldSwap(!shouldSwap);
     setCurrency(prevState => ({ base: prevState.relative, relative: prevState.base }));
   };
@@ -72,11 +82,14 @@ const App: React.FC = () => {
   return (
     <div className='App'>
       <h2>Rates converter</h2>
-      <Chart dates={chartProps?.dates} rates={chartProps?.rates} />
+      <div className="chart-container">
+        <Chart dates={chartProps?.dates} rates={chartProps?.rates} />
+        <RadioButtons onDateChange={onDateChange} />
+      </div>
       {isError && <div>Something went wrong...</div>}
       <div className='buttons'>
         <CurrencyPicker currency={currency.base} setCurrentCurrency={setBaseCurrency} />
-        <SyncAltRoundedIcon onClick={handleClick} />
+        <SyncAltRoundedIcon onClick={handleCurrencySwap} />
         <CurrencyPicker currency={currency.relative} setCurrentCurrency={setRelativeCurrency} />
       </div>
     </div>
