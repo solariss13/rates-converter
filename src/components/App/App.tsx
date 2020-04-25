@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import Chart from '../Chart/Chart';
 import CurrencyPicker from '../CurrencyPicker/CurrencyPicker';
 import SyncAltRoundedIcon from '@material-ui/icons/SyncAltRounded';
-import RadioButtons, { getDateFromPast } from '../RadioButtons/RadioButtons';
+import Slider from '../Slider/Slider';
+import { calculateDate } from '../Slider/Slider';
+import Error from '../Error/Error';
 import axios from 'axios';
 import './App.css';
 
 const defaultBaseCurrency = 'PLN';
 const defaultRelativeCurrency = 'EUR';
-const today = getDateFromPast(0);
-const weekAgo = getDateFromPast(7);
+const today = calculateDate(1096);
+const weekAgo = calculateDate(1089);
 
 
 interface CurrencyType {
@@ -36,13 +38,20 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       setIsError(false);
+
       try {
         const { data: { rates } } = await axios.get(
           `https://api.exchangeratesapi.io/history?start_at=${date}&end_at=${today}&base=${currency.base}&symbols=${currency.relative}`
         );
 
-        setRatesData(Object.entries(rates as Object).sort());
+        const sortedRates = Object.entries(rates as Object).sort();
+        if (!sortedRates.length) {
+          setIsError(true);
+        }
+
+        setRatesData(sortedRates);
       } catch(error) {
+        setRatesData(undefined);
         setIsError(true);
       }
     }
@@ -51,16 +60,16 @@ const App: React.FC = () => {
   }, [currency, date]);
 
   useEffect(() => {
-    setChartProps(prepareChartData());
+    function prepareChartData() {
+      const dates = ratesData?.map(rate => rate[0]);
+      const rates = ratesData?.flatMap(rate => Object.values(rate[1]));
+
+      return { dates, rates };
+    };
+
+    const props = prepareChartData();
+    setChartProps(props);
   }, [ratesData]);
-
-
-  function prepareChartData() {
-    const dates = ratesData?.map(rate => rate[0]);
-    const rates = ratesData?.flatMap(rate => Object.values(rate[1]));
-
-    return { dates, rates };
-  };
 
   function onDateChange(date: string) {
     setDate(date);
@@ -80,19 +89,17 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className='App'>
+    <>
       <h2>Rates converter</h2>
-      <div className="chart-container">
-        <Chart dates={chartProps?.dates} rates={chartProps?.rates} />
-        <RadioButtons onDateChange={onDateChange} />
-      </div>
-      {isError && <div>Something went wrong...</div>}
+      <Chart dates={chartProps?.dates} rates={chartProps?.rates} />
+      <Slider onDateChange={onDateChange} />
       <div className='buttons'>
         <CurrencyPicker currency={currency.base} setCurrentCurrency={setBaseCurrency} />
         <SyncAltRoundedIcon onClick={handleCurrencySwap} />
         <CurrencyPicker currency={currency.relative} setCurrentCurrency={setRelativeCurrency} />
       </div>
-    </div>
+      {isError && <Error/>}
+    </>
   );
 };
 
