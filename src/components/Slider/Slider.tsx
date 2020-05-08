@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import Slider from '@material-ui/core/Slider';
 import Tooltip from '@material-ui/core/Tooltip';
-import useDebounce from '../../use-debounce';
+import debounce from '../../utils/use-debounce';
+import calculateDate from '../../utils/calculateDate';
 
 const useStyles = makeStyles(() =>
   createStyles({
@@ -32,7 +33,7 @@ function ValueLabelComponent(props: PropTypes) {
   const { children, open, value } = props;
 
   return (
-    <Tooltip open={open} enterTouchDelay={0} placement="top" title={calculateDate(value)}>
+    <Tooltip open={open} enterTouchDelay={0} placement='top' title={calculateDate(value)}>
       {children}
     </Tooltip>
   );
@@ -40,16 +41,14 @@ function ValueLabelComponent(props: PropTypes) {
 
 const CustomizedSlider: React.FC<CustomizedSliderProps> = ({ onDateChange }) => {
   const [state, setState] = useState<string>(calculateDate(1089));
+  const debouncedState = debounce(state, 100);
   const classes = useStyles();
-
-const debouncedState = useDebounce(state, 100);
 
   useEffect(() => {
     onDateChange(state as string);
   }, [debouncedState]);
 
-
-  const handleChange = (event: React.ChangeEvent<{}>, value: number | number[]) => {
+  function handleChange(event: React.ChangeEvent<{}>, value: number | number[]) {
     const date: string = calculateDate(value as number);
 
     setState(date)
@@ -58,7 +57,7 @@ const debouncedState = useDebounce(state, 100);
   return (
     <div className={classes.root}>
       <Slider
-        track="inverted"
+        track='inverted'
         ValueLabelComponent={ValueLabelComponent}
         onChange={handleChange}
         defaultValue={1089}
@@ -70,14 +69,3 @@ const debouncedState = useDebounce(state, 100);
 }
 
 export default CustomizedSlider;
-
-
-export function calculateDate(value: number) {
-  const referenceDate = new Date();
-  const daysAgo = 1096 - value;
-  const dateInPast = referenceDate.getDate() - daysAgo;
-
-  referenceDate.setDate(dateInPast);
-
-  return referenceDate.toISOString().split('T')[0];
-}

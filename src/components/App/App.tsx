@@ -1,47 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Chart from '../Chart/Chart';
 import CurrencyPicker from '../CurrencyPicker/CurrencyPicker';
-import SyncAltRoundedIcon from '@material-ui/icons/SyncAltRounded';
 import Slider from '../Slider/Slider';
-import { calculateDate } from '../Slider/Slider';
 import Error from '../Error/Error';
+import SyncAltRoundedIcon from '@material-ui/icons/SyncAltRounded';
+import { AppContext } from '../../context/context';
+import ACTION from '../../context/actions';
 import axios from 'axios';
 import './App.css';
 
-const defaultBaseCurrency = 'PLN';
-const defaultRelativeCurrency = 'EUR';
-const today = calculateDate(1096);
-const weekAgo = calculateDate(1089);
 
-
-interface CurrencyType {
-  base: string,
-  relative: string
-}
-
-interface ChartPropsType {
-  dates: Array<string> | undefined;
-  rates: Array<number> | undefined;
-}
-
-type RateType = [string, {[key: string]: number}]
-
+export type RateType = [string, {[key: string]: number}];
+export type RatesDataType = Array<RateType> | undefined;
 
 const App: React.FC = () => {
-  const [shouldSwap, toggleShouldSwap] = useState<boolean>(false);
-  const [ratesData, setRatesData] = useState<Array<RateType> | undefined>();
-  const [currency, setCurrency] = useState<CurrencyType>({base: defaultBaseCurrency, relative: defaultRelativeCurrency});
+  const { state:
+    {
+      today,
+      date,
+      baseCurrency,
+      relativeCurrency,
+      ratesData,
+      chartProps
+    },
+    dispatch } = useContext(AppContext);
+
   const [isError, setIsError] = useState<boolean>(false);
-  const [chartProps, setChartProps] = useState<ChartPropsType | undefined>();
-  const [date, setDate] = useState<string>(weekAgo);
+
+  const query = `https://api.exchangeratesapi.io/history?start_at=${date}&end_at=${today}&base=${baseCurrency}&symbols=${relativeCurrency}`
+
 
   useEffect(() => {
     const fetchData = async () => {
       setIsError(false);
 
+      function setRatesData(ratesData: RatesDataType) {
+        dispatch({
+          type: ACTION.RATES_DATA_CHANGED,
+          payload: ratesData
+        });
+      };
       try {
         const { data: { rates } } = await axios.get(
-          `https://api.exchangeratesapi.io/history?start_at=${date}&end_at=${today}&base=${currency.base}&symbols=${currency.relative}`
+          `${query}`
         );
 
         const sortedRates = Object.entries(rates as Object).sort();
@@ -57,35 +58,50 @@ const App: React.FC = () => {
     }
 
     fetchData();
-  }, [currency, date]);
+  }, [baseCurrency, relativeCurrency, date, query, dispatch]);
+
 
   useEffect(() => {
-    function prepareChartData() {
-      const dates = ratesData?.map(rate => rate[0]);
-      const rates = ratesData?.flatMap(rate => Object.values(rate[1]));
+    function setChartProps(ratesData: RatesDataType) {
+      dispatch({
+        type: ACTION.PREPARE_CHART_PROPS,
+        payload: ratesData
+      });
+    }
 
-      return { dates, rates };
-    };
+    setChartProps(ratesData);
+  }, [ratesData, dispatch]);
 
-    const props = prepareChartData();
-    setChartProps(props);
-  }, [ratesData]);
 
   function onDateChange(date: string) {
-    setDate(date);
+    dispatch({
+      type: ACTION.DATE_CHANGED,
+      payload: date
+    });
   };
 
   function setRelativeCurrency(newCurrency: string) {
-    setCurrency({ relative: newCurrency, base: currency.base })
+    dispatch({
+      type: ACTION.RELATIVE_COUNTRY_CHANGED,
+      payload: newCurrency
+    });
   };
 
   function setBaseCurrency(newCurrency: string) {
-    setCurrency({ base: newCurrency, relative: currency.relative })
+    dispatch({
+      type: ACTION.BASE_COUNTRY_CHANGED,
+      payload: newCurrency
+    });
   };
 
   function handleCurrencySwap() {
-    toggleShouldSwap(!shouldSwap);
-    setCurrency(prevState => ({ base: prevState.relative, relative: prevState.base }));
+    dispatch({
+      type: ACTION.CURRENCY_SWAP,
+      payload: {
+        baseCurrency: relativeCurrency,
+        relativeCurrency: baseCurrency
+      }
+    });
   };
 
   return (
@@ -94,9 +110,9 @@ const App: React.FC = () => {
       <Chart dates={chartProps?.dates} rates={chartProps?.rates} />
       <Slider onDateChange={onDateChange} />
       <div className='buttons'>
-        <CurrencyPicker currency={currency.base} setCurrentCurrency={setBaseCurrency} />
+        <CurrencyPicker currency={baseCurrency} setCurrentCurrency={setBaseCurrency} />
         <SyncAltRoundedIcon onClick={handleCurrencySwap} />
-        <CurrencyPicker currency={currency.relative} setCurrentCurrency={setRelativeCurrency} />
+        <CurrencyPicker currency={relativeCurrency} setCurrentCurrency={setRelativeCurrency} />
       </div>
       {isError && <Error/>}
     </>

@@ -1,13 +1,13 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
 
-interface PropTypes {
+export interface ChartPropTypes {
   dates: Array<string> | undefined;
   rates: Array<number> | undefined;
 }
 
 
-const Chart: React.FC<PropTypes> = ({ dates, rates }) => {
+const Chart: React.FC<ChartPropTypes> = ({ dates, rates }) => {
   const data = {
     labels: dates,
     datasets: [
